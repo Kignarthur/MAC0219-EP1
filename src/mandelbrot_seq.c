@@ -41,6 +41,8 @@ int colors[17][3] = {
                         {16, 16, 16},
                     };
 
+int IO_ALLOC_MEM;
+
 void allocate_image_buffer(){
     int rgb_size = 3;
     image_buffer = (unsigned char **) malloc(sizeof(unsigned char *) * image_buffer_size);
@@ -57,13 +59,13 @@ void free_image_buffer(){
 }
 
 void init(int argc, char *argv[]){
-    if(argc < 6){
-        printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max image_size\n");
+    if(argc != 7){
+        printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max image_size io_alloc_mem\n");
         printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_seq -2.5 1.5 -2.0 2.0 11500\n");
-        printf("    Seahorse Valley:      ./mandelbrot_seq -0.8 -0.7 0.05 0.15 11500\n");
-        printf("    Elephant Valley:      ./mandelbrot_seq 0.175 0.375 -0.1 0.1 11500\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_seq -0.188 -0.012 0.554 0.754 11500\n");
+        printf("    Full Picture:         ./mandelbrot_seq -2.5 1.5 -2.0 2.0 11500 1\n");
+        printf("    Seahorse Valley:      ./mandelbrot_seq -0.8 -0.7 0.05 0.15 11500 0\n");
+        printf("    Elephant Valley:      ./mandelbrot_seq 0.175 0.375 -0.1 0.1 11500 1\n");
+        printf("    Triple Spiral Valley: ./mandelbrot_seq -0.188 -0.012 0.554 0.754 11500 0\n");
         exit(0);
     }
     else{
@@ -72,6 +74,7 @@ void init(int argc, char *argv[]){
         sscanf(argv[3], "%lf", &Y_MIN);
         sscanf(argv[4], "%lf", &Y_MAX);
         sscanf(argv[5], "%d", &image_size);
+        sscanf(argv[6], "%d", &IO_ALLOC_MEM);
 
         IMAGE_WIDTH           = image_size;
         IMAGE_HEIGHT           = image_size;
@@ -159,7 +162,7 @@ void compute_mandelbrot(){
                 z_y_squared = z_y * z_y;
             };
 
-            // update_rgb_buffer(iteration, x_i, y_i);
+            if (IO_ALLOC_MEM) update_rgb_buffer(iteration, x_i, y_i);
         };
     };
 };
@@ -167,13 +170,18 @@ void compute_mandelbrot(){
 int main(int argc, char *argv[]){
     init(argc, argv);
 
-    // allocate_image_buffer();
+    if (IO_ALLOC_MEM){
 
-    // compute_mandelbrot();
+        allocate_image_buffer();
 
-    write_to_file();
+        compute_mandelbrot();
 
-    // free_image_buffer();
+        write_to_file();
+
+        free_image_buffer();
+    }
+
+    else compute_mandelbrot();
 
     return 0;
 };

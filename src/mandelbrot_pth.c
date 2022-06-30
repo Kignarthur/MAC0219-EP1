@@ -3,8 +3,6 @@
 #include <math.h>
 #include <pthread.h>
 
-#define NUM_THREADS 64
-
 double X_MIN;
 double X_MAX;
 double Y_MIN;
@@ -43,6 +41,8 @@ int colors[17][3] = {
                         {16, 16, 16},
                     };
 
+int NUM_THREADS;
+
 void allocate_image_buffer(){
     int rgb_size = 3;
     image_buffer = (unsigned char **) malloc(sizeof(unsigned char *) * image_buffer_size);
@@ -59,13 +59,13 @@ void free_image_buffer(){
 }
 
 void init(int argc, char *argv[]){
-    if(argc < 6){
-        printf("usage: ./mandelbrot_pth c_x_min c_x_max c_y_min c_y_max image_size\n");
+    if(argc != 7){
+        printf("usage: ./mandelbrot_pth c_x_min c_x_max c_y_min c_y_max image_size num_threads\n");
         printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_pth -2.5 1.5 -2.0 2.0 11500\n");
-        printf("    Seahorse Valley:      ./mandelbrot_pth -0.8 -0.7 0.05 0.15 11500\n");
-        printf("    Elephant Valley:      ./mandelbrot_pth 0.175 0.375 -0.1 0.1 11500\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_pth -0.188 -0.012 0.554 0.754 11500\n");
+        printf("    Full Picture:         ./mandelbrot_pth -2.5 1.5 -2.0 2.0 11500 4\n");
+        printf("    Seahorse Valley:      ./mandelbrot_pth -0.8 -0.7 0.05 0.15 11500 16\n");
+        printf("    Elephant Valley:      ./mandelbrot_pth 0.175 0.375 -0.1 0.1 11500 32\n");
+        printf("    Triple Spiral Valley: ./mandelbrot_pth -0.188 -0.012 0.554 0.754 11500 64\n");
         exit(0);
     }
     else{
@@ -74,6 +74,7 @@ void init(int argc, char *argv[]){
         sscanf(argv[3], "%lf", &Y_MIN);
         sscanf(argv[4], "%lf", &Y_MAX);
         sscanf(argv[5], "%d", &image_size);
+        sscanf(argv[6], "%d", &NUM_THREADS);
 
         IMAGE_WIDTH           = image_size;
         IMAGE_HEIGHT           = image_size;
@@ -162,7 +163,7 @@ void *compute_mandelbrot(void *t){
                 z_y_squared = z_y * z_y;
             };
 
-            update_rgb_buffer(iteration, x_i, y_i);
+            // update_rgb_buffer(iteration, x_i, y_i);
         };
     };
 };
@@ -170,7 +171,7 @@ void *compute_mandelbrot(void *t){
 int main(int argc, char *argv[]){
     init(argc, argv);
 
-    allocate_image_buffer();
+    // allocate_image_buffer();
 
     pthread_t threads[NUM_THREADS];
     for(long t = 0; t < NUM_THREADS; t++)
@@ -178,9 +179,9 @@ int main(int argc, char *argv[]){
 
     for(long t = 0; t < NUM_THREADS; t++) pthread_join(threads[t], NULL);
 
-    write_to_file();
+    // write_to_file();
 
-    free_image_buffer();
+    // free_image_buffer();
 
     pthread_exit(NULL);
 };

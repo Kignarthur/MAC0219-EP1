@@ -42,6 +42,8 @@ int colors[17][3] = {
                         {16, 16, 16},
                     };
 
+int NUM_THREADS;
+
 void allocate_image_buffer(){
     int rgb_size = 3;
     image_buffer = (unsigned char **) malloc(sizeof(unsigned char *) * image_buffer_size);
@@ -58,13 +60,13 @@ void free_image_buffer(){
 }
 
 void init(int argc, char *argv[]){
-    if(argc < 6){
-        printf("usage: ./mandelbrot_omp c_x_min c_x_max c_y_min c_y_max image_size\n");
+    if(argc != 7){
+        printf("usage: ./mandelbrot_pth c_x_min c_x_max c_y_min c_y_max image_size num_threads\n");
         printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_omp -2.5 1.5 -2.0 2.0 11500\n");
-        printf("    Seahorse Valley:      ./mandelbrot_omp -0.8 -0.7 0.05 0.15 11500\n");
-        printf("    Elephant Valley:      ./mandelbrot_omp 0.175 0.375 -0.1 0.1 11500\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_omp -0.188 -0.012 0.554 0.754 11500\n");
+        printf("    Full Picture:         ./mandelbrot_pth -2.5 1.5 -2.0 2.0 11500 4\n");
+        printf("    Seahorse Valley:      ./mandelbrot_pth -0.8 -0.7 0.05 0.15 11500 16\n");
+        printf("    Elephant Valley:      ./mandelbrot_pth 0.175 0.375 -0.1 0.1 11500 32\n");
+        printf("    Triple Spiral Valley: ./mandelbrot_pth -0.188 -0.012 0.554 0.754 11500 64\n");
         exit(0);
     }
     else{
@@ -73,6 +75,7 @@ void init(int argc, char *argv[]){
         sscanf(argv[3], "%lf", &Y_MIN);
         sscanf(argv[4], "%lf", &Y_MAX);
         sscanf(argv[5], "%d", &image_size);
+        sscanf(argv[6], "%d", &NUM_THREADS);
 
         IMAGE_WIDTH           = image_size;
         IMAGE_HEIGHT           = image_size;
@@ -122,7 +125,7 @@ void write_to_file(){
 void compute_mandelbrot(){
     const double escape_radius_squared = 4;
 
-    #pragma omp parallel for schedule(dynamic) num_threads(4)
+    #pragma omp parallel for schedule(dynamic) num_threads(NUM_THREADS)
     for(int y_i = 0; y_i < IMAGE_HEIGHT; y_i++){
         for(int x_i = 0; x_i < IMAGE_WIDTH; x_i++){
             double c_y = Y_MIN + y_i * pixel_height;
