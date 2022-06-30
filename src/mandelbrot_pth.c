@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <pthread.h>
+
+#define NUM_THREADS 64
 
 double X_MIN;
 double X_MAX;
@@ -48,6 +51,12 @@ void allocate_image_buffer(){
         image_buffer[i] = (unsigned char *) malloc(sizeof(unsigned char) * rgb_size);
     };
 };
+
+void free_image_buffer(){
+    for(int i = 0; i < image_buffer_size; i++)
+        free(image_buffer[i]);
+    free(image_buffer);
+}
 
 void init(int argc, char *argv[]){
     if(argc < 6){
@@ -111,7 +120,7 @@ void write_to_file(){
     fclose(file);
 };
 
-void compute_mandelbrot(){
+void *compute_mandelbrot(void *t){
     double z_x;
     double z_y;
     double z_x_squared;
@@ -125,7 +134,11 @@ void compute_mandelbrot(){
     double c_x;
     double c_y;
 
-    for(y_i = 0; y_i < IMAGE_HEIGHT; y_i++){
+    long tid = (long) t;
+    int y_start = tid * IMAGE_HEIGHT / NUM_THREADS;
+    int y_end = (tid+1) * IMAGE_HEIGHT / NUM_THREADS;
+
+    for(y_i = y_start; y_i < y_end; y_i++){
         for(x_i = 0; x_i < IMAGE_WIDTH; x_i++){
             c_y = Y_MIN + y_i * pixel_height;
             c_x = X_MIN + x_i * pixel_width;
@@ -159,9 +172,15 @@ int main(int argc, char *argv[]){
 
     allocate_image_buffer();
 
-    compute_mandelbrot();
+    pthread_t threads[NUM_THREADS];
+    for(long t = 0; t < NUM_THREADS; t++)
+        pthread_create(&threads[t], NULL, compute_mandelbrot, (void *) t);
+
+    for(long t = 0; t < NUM_THREADS; t++) pthread_join(threads[t], NULL);
 
     write_to_file();
 
-    return 0;
+    free_image_buffer();
+
+    pthread_exit(NULL);
 };
