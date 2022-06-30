@@ -51,6 +51,12 @@ void allocate_image_buffer(){
     };
 };
 
+void free_image_buffer(){
+    for(int i = 0; i < image_buffer_size; i++)
+        free(image_buffer[i]);
+    free(image_buffer);
+}
+
 void init(int argc, char *argv[]){
     if(argc < 6){
         printf("usage: ./mandelbrot_omp c_x_min c_x_max c_y_min c_y_max image_size\n");
@@ -116,7 +122,7 @@ void write_to_file(){
 void compute_mandelbrot(){
     const double escape_radius_squared = 4;
 
-    #pragma omp parallel for num_threads(4)
+    #pragma omp parallel for schedule(dynamic) num_threads(4)
     for(int y_i = 0; y_i < IMAGE_HEIGHT; y_i++){
         for(int x_i = 0; x_i < IMAGE_WIDTH; x_i++){
             double c_y = Y_MIN + y_i * pixel_height;
@@ -143,7 +149,7 @@ void compute_mandelbrot(){
                 z_y_squared = z_y * z_y;
             };
 
-            update_rgb_buffer(iteration, x_i, y_i);
+            // update_rgb_buffer(iteration, x_i, y_i);
         };
     };
 };
@@ -151,19 +157,13 @@ void compute_mandelbrot(){
 int main(int argc, char *argv[]){
     init(argc, argv);
 
-    allocate_image_buffer();
+    // allocate_image_buffer();
 
-    clock_t begin = clock();
     compute_mandelbrot();
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("Time to compute = %lf\n", time_spent);
 
-    write_to_file();
+    // write_to_file();
 
-    for(int i = 0; i < image_buffer_size; i++)
-        free(image_buffer[i]);
-    free(image_buffer);
+    // free_image_buffer();
 
     return 0;
 };
