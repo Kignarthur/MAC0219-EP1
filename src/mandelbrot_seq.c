@@ -50,6 +50,12 @@ void allocate_image_buffer(){
     };
 };
 
+void free_image_buffer(){
+    for(int i = 0; i < image_buffer_size; i++)
+        free(image_buffer[i]);
+    free(image_buffer);
+}
+
 void init(int argc, char *argv[]){
     if(argc < 6){
         printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max image_size\n");
@@ -153,7 +159,7 @@ void compute_mandelbrot(){
                 z_y_squared = z_y * z_y;
             };
 
-            update_rgb_buffer(iteration, x_i, y_i);
+            // update_rgb_buffer(iteration, x_i, y_i);
         };
     };
 };
@@ -161,15 +167,13 @@ void compute_mandelbrot(){
 int main(int argc, char *argv[]){
     init(argc, argv);
 
-    allocate_image_buffer();
+    // allocate_image_buffer();
 
-    clock_t begin = clock();
-    compute_mandelbrot();
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    printf("Time to compute = %lf\n", time_spent);
+    // compute_mandelbrot();
 
     write_to_file();
+
+    // free_image_buffer();
 
     return 0;
 };
